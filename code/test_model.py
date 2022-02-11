@@ -14,7 +14,7 @@ tf.random.set_seed(7)
 
 input = np.load("../all_images2_normalised.npy")
 output = np.load("../output2_normalised.npy")
-model = keras.models.load_model('model7')
+model = keras.models.load_model('model9')
 
 class_names = ["Bird", "Eastern Gray Squirrel", "Eastern Chipmunk", "Woodchuck", "Wild Turkey", 
     "White_Tailed_Deer", "Virginia Opossum", "Eastern Cottontail", "Vehicle", "Striped Skunk", 
@@ -38,11 +38,11 @@ print('Accuracy: %.3f' % acc)
 ### training vs validation ###
 
 # loss & accuracy history from model training
-callback_history = load(open("callback_history7", "r"))
+callback_history = load(open("callback_history9", "r"))
 print(callback_history["loss"][0])
 
 # training vs validation loss
-epochs = np.arange(50)
+epochs = np.arange(100)
 epochs = epochs + 1
 loss = np.asarray(callback_history["loss"])
 val_loss = np.asarray(callback_history["val_loss"])

@@ -12,9 +12,9 @@ import pandas as pd
 seed(7)
 tf.random.set_seed(7)
 
-input = np.load("../all_images2.npy")
-output = np.load("../output2.npy")
-model = keras.models.load_model('model5')
+input = np.load("../all_images2_normalised.npy")
+output = np.load("../output2_normalised.npy")
+model = keras.models.load_model('model7')
 
 class_names = ["Bird", "Eastern Gray Squirrel", "Eastern Chipmunk", "Woodchuck", "Wild Turkey", 
     "White_Tailed_Deer", "Virginia Opossum", "Eastern Cottontail", "Vehicle", "Striped Skunk", 
@@ -38,7 +38,7 @@ print('Accuracy: %.3f' % acc)
 ### training vs validation ###
 
 # loss & accuracy history from model training
-callback_history = load(open("callback_history5", "r"))
+callback_history = load(open("callback_history7", "r"))
 print(callback_history["loss"][0])
 
 # training vs validation loss
@@ -86,29 +86,32 @@ plt.bar(species_categories, all_occurences_counted)
 plt.title("Number of images per species")
 plt.show()
 
-# prep. predictions in correct format
 # [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.] -> 2
-output_predictions = model.predict(input_test)
-output_predictions_reshaped = []
-number_of_predictions = output_predictions.shape[0]
-for pred in range(number_of_predictions):
-    output_predictions_reshaped.append(np.argmax(output_predictions[pred]))
-output_predictions_reshaped = np.asarray(output_predictions_reshaped)
+def reshape_array_probability_predictions_to_int_class_prediction(array_predictions, number_of_predictions):
+    predictions_reshaped = []
+    for pred in range(number_of_predictions):
+        predictions_reshaped.append(np.argmax(array_predictions[pred]))
+    predictions_reshaped = np.asarray(predictions_reshaped)
+    return predictions_reshaped
+
+def make_predictions_in_correct_format():
+    array_predictions = model.predict(input_test)
+    number_of_predictions = array_predictions.shape[0]
+    predictions_reshaped = reshape_array_probability_predictions_to_int_class_prediction(array_predictions, number_of_predictions)
+    return predictions_reshaped
+
+output_predictions_reshaped = make_predictions_in_correct_format()
 
 # confusion matrix
 confusion_matrix = confusion_matrix(output_test, output_predictions_reshaped)
-confusion_matrix = np.mat(confusion_matrix) # interpret as a matrix
-conf_matrix_data_frame = pd.DataFrame(
-    confusion_matrix, index = class_names, columns = class_names
-)
+confusion_matrix_normalised = confusion_matrix.astype('float') / confusion_matrix.sum(axis=1)[:, np.newaxis]
 
 plt.figure()
-heatmap = sns.heatmap(conf_matrix_data_frame, annot=True, cmap="Blues")
+heatmap = sns.heatmap(confusion_matrix_normalised, annot=True, fmt='.2f', xticklabels=class_names, yticklabels=class_names)
 heatmap.yaxis.set_ticklabels(heatmap.yaxis.get_ticklabels(), rotation=0, ha="right")
 heatmap.xaxis.set_ticklabels(heatmap.yaxis.get_ticklabels(), rotation=45, ha="right")
-plt.ylabel("True label")
-plt.xlabel("Predicted label")
-plt.title("Classification Results")
+plt.ylabel('Actual')
+plt.xlabel('Predicted')
 plt.show()
 
 # calculate TP, FP, FN and TN
